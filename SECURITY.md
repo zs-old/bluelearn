@@ -9,7 +9,6 @@ Preferred channels (in order):
 
 1. **GitHub private vulnerability reporting** — open a report at
   [[https://github.com/The-B-L-U-E-Project/blue-prototype/security/advisories/new]([https://github.com/The-B-L-U-E-Project/blue-prototype/security/advisories/new](https://github.com/bluelearn-org/Bluelearn/security/advisories/new))](https://github.com/bluelearn-org/Bluelearn/security/advisories/new)
-   (replace with the real path once the repo is public).
 2. **Email:** `lam.tony540@gmail.com`. 
 
 Please include:
