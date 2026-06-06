@@ -23,6 +23,13 @@
     "api:deploy": "pnpm --filter api deploy"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "workerd", "sharp"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  },
+  "devDependencies": {
+    "supabase": "^2.105.0"
   }
 }
