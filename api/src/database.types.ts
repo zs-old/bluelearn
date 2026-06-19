@@ -901,6 +901,16 @@ export type Database = {
       }
     }
     Functions: {
+      create_topic: {
+        Args: {
+          p_body?: string
+          p_knowledge_type: Database["public"]["Enums"]["knowledge_type"]
+          p_slug: string
+          p_summary?: string
+          p_title: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: { check_role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
