@@ -1,6 +1,18 @@
 import { Hono } from 'hono'
 import { requireUser } from '../middleware/auth.middleware'
 import type { HonoEnv } from '../types'
+import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
+
+const schema = z.object({
+  id: z.string().uuid(), // currently uuid, can be changed
+  slug: z.string()
+    .min(3, { message: "Subject must be at least 3 characters long."})
+    .max(35, { message: "Subject can be no longer than 35 characters."}),
+  name: z.string()
+    .min(3, { message: "Subject must be at least 3 characters long."})
+    .max(35, { message: "Subject can be no longer than 35 characters."})
+}
 
 export const subjectsRouter = new Hono<HonoEnv>()
   // List all subjects
@@ -17,11 +29,11 @@ export const subjectsRouter = new Hono<HonoEnv>()
   })
 
   // Create a subject
-  .post('/', requireUser, async (c) => {
+  .post('/', requireUser, zValidator('json', schema), async (c) => {
     const supabase = c.get('supabase')
     const user = c.get('user')
 
-    const {id, slug, name} = await c.req.json()
+    const {id, slug, name} = await c.req.valid()
     const creator_id = user.id
     const created_at = new Date().toISOString()
 
