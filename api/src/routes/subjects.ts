@@ -43,7 +43,7 @@ export const subjectsRouter = new Hono<HonoEnv>()
       return c.json({error: insert_error.message}, 500)
     }
     
-    return c.json(insert_data, 201)
+    return c.json({subject: insert_data}, 201)
   })
 
   // Subject metadata only (the tagged list is a separate call)
@@ -61,7 +61,7 @@ export const subjectsRouter = new Hono<HonoEnv>()
     if (!data) {
       return c.json({error: 'Subject not found.'}, 404)
     }
-    return c.json(data, 200)
+    return c.json({subject: data}, 200)
   })
 
   // Alphabetical list of topics carrying this subject tag
@@ -91,17 +91,18 @@ export const subjectsRouter = new Hono<HonoEnv>()
       return c.json({error: guide_error.message}, 500)
     }
 
-    const ids = guide_base_id.map(r => r.id)
+    const ids = guide_base_id.map(r => r.guide_base_id)
     if (ids.length === 0) return c.json([], 200)
 
     // get guide base metadate from it's ID
     const {data: guide_base_data, error: guide_base_error} = await supabase
       .from('guide_bases')
       .select('slug, title, knowledge_type')
-      .in('guide_base_id', ids)
+      .in('id', ids)
+      .order('title')
     if (guide_base_error) {
       return c.json({error: guide_base_error.message}, 500)
     }
 
-    return c.json(guide_base_data, 200)
+    return c.json({guide_bases: guide_base_data}, 200)
   })
