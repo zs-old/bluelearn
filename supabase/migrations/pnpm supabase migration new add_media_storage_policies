@@ -1,0 +1,18 @@
+-- turn on rls for the storage objects
+alter table storage.objects enable row level security;
+
+-- make the media bucket public so anyone can view files
+drop policy if exists "Media bucket files are public" on storage.objects;
+create policy "Media bucket files are public"
+  on storage.objects for select
+  using (bucket_id = 'media');
+
+-- let logged in users upload to media bucket (using the select auth uid fix)
+drop policy if exists "Users can upload files to media bucket" on storage.objects;
+create policy "Users can upload files to media bucket"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'media' 
+    and owner = (select auth.uid())
+  );
