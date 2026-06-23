@@ -142,6 +142,7 @@ export type Database = {
       }
       guide_revisions: {
         Row: {
+          approved_at: string | null
           author_id: string | null
           body: string | null
           change_summary: string | null
@@ -149,12 +150,12 @@ export type Database = {
           guide_id: string
           id: string
           is_purged: boolean
-          revision_number: number
           status: Database["public"]["Enums"]["revision_status"]
           summary: string | null
           title: string | null
         }
         Insert: {
+          approved_at?: string | null
           author_id?: string | null
           body?: string | null
           change_summary?: string | null
@@ -162,12 +163,12 @@ export type Database = {
           guide_id: string
           id?: string
           is_purged?: boolean
-          revision_number: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
         }
         Update: {
+          approved_at?: string | null
           author_id?: string | null
           body?: string | null
           change_summary?: string | null
@@ -175,7 +176,6 @@ export type Database = {
           guide_id?: string
           id?: string
           is_purged?: boolean
-          revision_number?: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
@@ -391,7 +391,6 @@ export type Database = {
           created_at: string
           id: string
           learning_path_id: string
-          revision_number: number
           status: Database["public"]["Enums"]["revision_status"]
           summary: string | null
           title: string | null
@@ -402,7 +401,6 @@ export type Database = {
           created_at?: string
           id?: string
           learning_path_id: string
-          revision_number: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
@@ -413,7 +411,6 @@ export type Database = {
           created_at?: string
           id?: string
           learning_path_id?: string
-          revision_number?: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
@@ -905,7 +902,7 @@ export type Database = {
     }
     Functions: {
       compute_walkthrough: { Args: { p_guide_base_id: string }; Returns: Json }
-      create_topic: {
+      create_guide: {
         Args: {
           p_body?: string
           p_knowledge_type?: Database["public"]["Enums"]["knowledge_type"]

@@ -5,9 +5,6 @@ properties:
     $ref: '../common/Uuid.yaml'
   guide_id:
     $ref: '../common/Uuid.yaml'
-  revision_number:
-    type: integer
-    example: 3
   title:
     type: string
     example: Calculus
@@ -22,4 +19,4 @@ properties:
     $ref: '../common/RevisionStatus.yaml'
   created_at:
     $ref: '../common/Timestamp.yaml'
-required: [id, guide_id, revision_number, title, status]
+required: [id, guide_id, title, status]

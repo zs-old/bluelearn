@@ -75,13 +75,13 @@ export async function listPublishedGuides(supabase: DB) {
 }
 
 // Create a guide: bundles the guide_base + first guide + draft revision in one
-// transaction via the create_topic RPC (RLS still applies, SECURITY INVOKER).
+// transaction via the create_guide RPC (RLS still applies, SECURITY INVOKER).
 // The draft starts empty (title/slug filled in the editor); returns the draft
 // revision id so the client can route to its editor.
 export async function createGuide(supabase: DB, input: CreateGuideInput) {
   const { title, knowledge_type, summary, body } = input
 
-  const { data: revision_id, error } = await supabase.rpc('create_topic', {
+  const { data: revision_id, error } = await supabase.rpc('create_guide', {
     p_title: title ?? undefined,
     p_knowledge_type: knowledge_type,
     p_summary: summary ?? undefined,

@@ -3,9 +3,6 @@ description: A revision summary for history lists (guide, variant, or path).
 properties:
   id:
     $ref: './Uuid.yaml'
-  revision_number:
-    type: integer
-    example: 1
   status:
     type: string
     description: >
@@ -15,4 +12,10 @@ properties:
     example: approved
   created_at:
     $ref: './Timestamp.yaml'
-required: [id, revision_number, status, created_at]
+  approved_at:
+    description: >
+      When the revision was approved and promoted to live. Null unless it went
+      live.
+    type: [string, 'null']
+    format: date-time
+required: [id, status, created_at]

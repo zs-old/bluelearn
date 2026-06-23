@@ -90,13 +90,13 @@ The single content store: immutable, append-only version history for all guide c
 
 - `id`: primary key of the revision row.
 - `guide_id`: which guide this revision belongs to (many revisions to one guide; FK to `guides`).
-- `revision_number`: per-guide counter (1, 2, 3, ...), unique with `guide_id`.
 - `title`: the guide's human-facing title as of this revision. Versioned alongside `body`, so renames live in the history and are restored on rollback. The guide's live title is its current revision's title; `guides.slug` is derived from it at first publish and then frozen (see [Slugs and URLs](#slugs-and-urls)).
 - `summary`: short description for lists and previews, as of this revision.
 - `body`: the full guide content (markdown) as of this revision. Media is referenced by URL, not embedded, so large assets live in object storage rather than in the row.
 - `change_summary`: author's note describing what changed in this revision (like a commit message). Drives the "what changed" entry in the history list.
 - `author_id`: who wrote this specific revision. May differ from the guide's original author, which is how edit credit spreads across contributors.
 - `created_at`: when this revision was written.
+- `approved_at`: when this revision was approved and promoted to its guide's `current_revision_id` (the moment it went live), null until then. A revision can accrue several `review_cases` over its life (resubmit, dispute, appeal, re_review), so its go-live time can't be cleanly derived from them; it is recorded here as one unambiguous value. This is **not** the review verdict (that stays owned by `review_cases.status` and is derived) — only the publish-event time, used to order the published-version history by when each version actually went live rather than when its draft was written.
 - `status`: draft lifecycle state (see enum below).
 - `is_purged`: boolean, default `false`; set `true` when the content fields are nulled by a purge. Distinguishes a deliberate purge from accidental data corruption (a null `body` that nobody intended). Without it, an empty content row is ambiguous.
 
@@ -256,7 +256,6 @@ Append-only version history plus the path's editorial metadata, mirroring `guide
 
 - `id`: primary key of the revision row.
 - `learning_path_id`: which path this revision belongs to (FK to `learning_paths`).
-- `revision_number`: per-path counter (1, 2, 3, ...), unique with `learning_path_id`.
 - `title`: the path's human-facing title as of this revision. Versioned; `learning_paths.slug` is derived from it at first publish and then frozen.
 - `summary`: short description for listings and the path header, as of this revision.
 - `change_summary`: curator's note describing what changed in this revision (like a commit message), driving the history list.
@@ -483,7 +482,7 @@ An `action` field picks the path in the `content_holds` table: `hidden` (reversi
 
 **Purge (`purge`) — irreversible, e.g. CSAM or court order.** The content is destroyed but the row survives as a tombstone, so the audit trail (author, dates, which guide) and all foreign keys stay valid. Nulling the body alone is not enough — copies live in three places, and a purge must reach all three:
 
-1. **Database row.** Null the content fields (`body`, `title`, `summary`, `change_summary`) and set `is_purged = true`; keep the skeleton (`id`, `guide_id`, `revision_number`, `author_id`, `created_at`). The row stays so pointers (`current_revision_id`, review cases) resolve to a tombstone, not a dangling id. The `is_purged` flag marks the tombstone as deliberate (vs. accidental corruption that left content null); who/when lives on the covering `content_holds` row.
+1. **Database row.** Null the content fields (`body`, `title`, `summary`, `change_summary`) and set `is_purged = true`; keep the skeleton (`id`, `guide_id`, `author_id`, `created_at`). The row stays so pointers (`current_revision_id`, review cases) resolve to a tombstone, not a dangling id. The `is_purged` flag marks the tombstone as deliberate (vs. accidental corruption that left content null); who/when lives on the covering `content_holds` row.
 2. **Object storage.** Media is referenced by URL in the body, so parsing markdown to find assets is unreliable. Delete via the manifest instead: iterate `revision_assets → media_assets.storage_key`, delete each key from the bucket, and verify it is gone. Before deleting a key, confirm no surviving (non-purged) revision still references that asset — shared assets must outlive a single revision's purge. (A CSAM legal purge overrides this and removes the asset regardless of references.) Because the DB and the bucket cannot share a transaction, queue one delete job per asset and mark the purge complete only once every job verifies deletion; a periodic orphan sweep reconciles bucket keys with no live manifest row as a backstop.
 3. **Backups.** Live nulling does nothing to existing DB/bucket backups. Policy (pick one, document it): **bounded retention** — backups expire after N days so purged content ages out (lingers ≤ N days in cold storage); or **crypto-shred** — per-object encryption keys, where deleting the key renders ciphertext unrecoverable in every backup at once. Bounded retention is the v1 default; crypto-shred is the upgrade if a notice demands immediate backup eradication.
 
@@ -526,7 +525,7 @@ Later on, as BLUE grows to contain a massive amount of guides, `guide_revisions`
 
 `guide_revisions` stores a **full snapshot** of the content per revision. The intended uses are view history, see what changed, and roll back to a previous version, which all work directly off snapshots:
 
-- **History view**: list revisions by `revision_number` with `change_summary`, author, and date.
+- **History view**: the published-version history lists the revisions that went live, ordered by `approved_at` (when each became the current content) rather than authoring order, so an early draft approved late lands where it went live.
 - **What changed**: compute a diff between two snapshots at display time (the diff is rendered, not stored).
 - **Rollback**: move the accepted-revision pointer back, or insert a new revision copying an older snapshot. Never destructive.
 
@@ -700,7 +699,7 @@ A user starts a brand-new topic from scratch.
 
 1. `guide_bases` → insert the node: `title`, `slug`, `knowledge_type`, `status = 'draft'`, `canonical_guide_id = NULL`. No content yet.
 2. `guides` → insert the first guide under it: `guide_base_id`, `author_id`, `status = 'draft'`, `current_revision_id = NULL`, `slug = NULL` (addressed by id until first publish).
-3. `guide_revisions` → insert revision 1 while the author writes: `guide_id`, `revision_number = 1`, `title`, `summary`, `body`, `author_id`, `status = 'draft'`.
+3. `guide_revisions` → insert the first revision while the author writes: `guide_id`, `title`, `summary`, `body`, `author_id`, `status = 'draft'`.
 4. `media_assets` / `revision_assets` → for each asset embedded in the body, upsert the asset (`storage_key`) and insert a `(revision_id, asset_id)` link. This manifest is what a later purge deletes from object storage, instead of scraping URLs from markdown.
 
 The author edits freely; each save can overwrite the draft revision (drafts are mutable up to submission; published revisions are immutable).
@@ -735,7 +734,7 @@ A second author adds another guide under a topic that already has a canonical gu
 
 ### 3. Edit an existing published guide
 
-1. `guide_revisions` → insert the next revision: `revision_number = N+1`, edited `title`/`summary`/`body`, `change_summary`, `author_id` (may differ from original author → spreads edit credit), `status = 'draft'` then `submitted` on handoff. `media_assets` / `revision_assets` → link this revision's assets, same as flow 1 step 4.
+1. `guide_revisions` → insert the next revision: edited `title`/`summary`/`body`, `change_summary`, `author_id` (may differ from original author → spreads edit credit), `status = 'draft'` then `submitted` on handoff. `media_assets` / `revision_assets` → link this revision's assets, same as flow 1 step 4.
 2. `review_cases` → `case_type = 'guide_edit'`; `guide_review_cases` → points at the new `guide_revision_id`.
 3. Panel / decisions / close: same as flow 1 steps 5–7.
 4. **On approval**: `guides.current_revision_id` → the new revision. `guides.slug` is **not** changed even if the title changed (slug frozen at first publish). The previous revision stays in history.
@@ -805,7 +804,7 @@ A moderator destroys content while keeping the audit trail. See [Content removal
 A curator builds a curated curriculum from one or more targets. Most of the work (DAG closure, projection) happens at authoring/publish time; opening the path later (flow 12) reads a frozen snapshot.
 
 1. `learning_paths` → insert the shell: `slug = NULL` (addressed by id until first publish), `status = 'draft'`, `current_revision_id = NULL`, `created_by`.
-2. `learning_path_revisions` → insert revision 1: `learning_path_id`, `revision_number = 1`, `title`, `summary`, `change_summary`, `author_id`, `status = 'draft'`.
+2. `learning_path_revisions` → insert the first revision: `learning_path_id`, `title`, `summary`, `change_summary`, `author_id`, `status = 'draft'`.
 3. **Pick targets:** the curator chooses one or more goal topics (and a variant for each). These are held in the editor until seeding; a target becomes a node flagged `is_target` in the next step.
 4. **Seed the curriculum:** the system computes the transitive prerequisite DAG closure of the chosen targets over `guide_edges`, picks a default variant per topic, and immediately materializes the whole closure: `learning_path_revision_nodes` → insert one row per closure topic (`revision_id`, `guide_base_id`, `guide_id`), setting `is_target = true` (with the curator's chosen variant) on the target topics and `false` on the rest. The draft starts as "everything included," and the curator narrows from there. Seeding into the real table (rather than holding the set in memory until submit) keeps a node row's meaning identical in every state. A row present means the topic is included; an absent row means it is excluded, so a `draft` revision and a `published` one read the same way, and submit needs no convert-set-into-rows step. The draft persists server-side, so the curator can leave and resume.
 5. **Curator edits the draft in place:** skip a prerequisite → `learning_path_revision_nodes` delete that `(revision_id, guide_base_id)` row. Swap a variant → update that row's `guide_id`. Annotate → set `note`. Edit metadata → update the revision's `title`/`summary`. Drafts are mutable up to submission (same as guide draft revisions). Whatever rows remain at submit *are* the included set, with no further translation.
@@ -815,7 +814,7 @@ A curator builds a curated curriculum from one or more targets. Most of the work
   - **Freeze the projection.** Project the current `guide_edges` graph onto the revision's included node set, bridging excluded topics, and `learning_path_revision_edges` → insert one row per projected edge: `revision_id`, `from_guide_base_id`, `to_guide_base_id`. This is the only time these rows are written; the revision is now immutable.
   - `learning_paths` → set `current_revision_id` = this revision, `status = 'published'`, and on revision 1 `slug = slugify(revision.title)` (frozen from here).
 
-On rejection nothing publishes; the revision stays a rejected snapshot (verdict derived from the case) and the curator may revise and resubmit, which creates a new revision and a new case. A later edit is the same flow starting at step 2 with `revision_number = N+1` and `case_type = 'learning_path_edit'`; on approval `current_revision_id` repoints and the slug is untouched. **Rollback** is a soft rollback: create a new revision cloning an older revision's targets/nodes, submit, and on approval repoint `current_revision_id`.
+On rejection nothing publishes; the revision stays a rejected snapshot (verdict derived from the case) and the curator may revise and resubmit, which creates a new revision and a new case. A later edit is the same flow starting at step 2 with `case_type = 'learning_path_edit'`; on approval `current_revision_id` repoints and the slug is untouched. **Rollback** is a soft rollback: create a new revision cloning an older revision's targets/nodes, submit, and on approval repoint `current_revision_id`.
 
 ### 12. Open a learning path
 

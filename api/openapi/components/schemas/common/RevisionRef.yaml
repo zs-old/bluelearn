@@ -3,9 +3,6 @@ description: Lightweight reference to a revision for diff/compare headers.
 properties:
   id:
     $ref: './Uuid.yaml'
-  revision_number:
-    type: integer
-    example: 3
   author_id:
     $ref: './Uuid.yaml'
   created_at:
@@ -13,4 +10,4 @@ properties:
   change_summary:
     type: [string, 'null']
     example: Fixed the limit definition.
-required: [id, revision_number]
+required: [id]

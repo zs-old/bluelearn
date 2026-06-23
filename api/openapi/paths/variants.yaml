@@ -120,11 +120,14 @@
         $ref: '../components/schemas/common/Uuid.yaml'
   get:
     tags: [variants]
-    summary: Revision history for this variant
+    summary: Published-version history for this variant
+    description: >
+      The revisions that went live, newest live first. Ordered by approved_at
+      (when each became the current content).
     operationId: listVariantRevisions
     responses:
       '200':
-        description: Revisions, newest first
+        description: Published versions, newest live first
         content:
           application/json:
             schema:
