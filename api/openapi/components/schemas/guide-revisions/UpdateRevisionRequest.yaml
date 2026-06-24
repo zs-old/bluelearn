@@ -1,0 +1,14 @@
+type: object
+description: Overwrite a draft revision (pre-submit only). Partial.
+minProperties: 1
+properties:
+  title:
+    type: string
+    example: Calculus
+  summary:
+    type: [string, 'null']
+  body:
+    type: [string, 'null']
+  change_summary:
+    type: [string, 'null']
+    example: Clarified the chain rule section.

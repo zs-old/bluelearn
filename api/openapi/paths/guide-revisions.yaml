@@ -1,0 +1,111 @@
+# Path items for /guide-revisions. Referenced from ../openapi.yaml.
+/guide-revisions/{id}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '../components/schemas/common/Uuid.yaml'
+  get:
+    tags: [guide-revisions]
+    summary: Get a revision snapshot
+    operationId: getGuideRevision
+    responses:
+      '200':
+        description: The revision snapshot
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                revision:
+                  $ref: '../components/schemas/guide-revisions/GuideRevision.yaml'
+              required: [revision]
+      '404':
+        $ref: '../components/responses/_shared.yaml#/NotFound'
+  patch:
+    tags: [guide-revisions]
+    summary: Overwrite a draft revision
+    description: Pre-submit only.
+    operationId: updateGuideRevision
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/guide-revisions/UpdateRevisionRequest.yaml'
+    responses:
+      '200':
+        description: The updated revision
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                revision:
+                  $ref: '../components/schemas/guide-revisions/GuideRevision.yaml'
+              required: [revision]
+      '400':
+        $ref: '../components/responses/_shared.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/_shared.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses/_shared.yaml#/NotFound'
+
+/guide-revisions/{id}/submit:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '../components/schemas/common/Uuid.yaml'
+  post:
+    tags: [guide-revisions]
+    summary: Submit a revision for review
+    description: Flips the revision to submitted and opens a review case.
+    operationId: submitGuideRevision
+    security:
+      - bearerAuth: []
+    responses:
+      '201':
+        description: Review case opened
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review_case_id:
+                  $ref: '../components/schemas/common/Uuid.yaml'
+              required: [review_case_id]
+      '401':
+        $ref: '../components/responses/_shared.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses/_shared.yaml#/NotFound'
+
+/guide-revisions/{id}/diff/{otherId}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        $ref: '../components/schemas/common/Uuid.yaml'
+    - name: otherId
+      in: path
+      required: true
+      schema:
+        $ref: '../components/schemas/common/Uuid.yaml'
+  get:
+    tags: [guide-revisions]
+    summary: Rendered diff between two revisions
+    operationId: diffGuideRevisions
+    responses:
+      '200':
+        description: The rendered diff
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/guide-revisions/GuideRevisionDiff.yaml'
+      '404':
+        $ref: '../components/responses/_shared.yaml#/NotFound'

@@ -1,0 +1,10 @@
+type: object
+properties:
+  title:
+    type: string
+    example: Physics-based approach
+  summary:
+    type: [string, 'null']
+  body:
+    type: [string, 'null']
+required: [title]

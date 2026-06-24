@@ -1,0 +1,59 @@
+type: object
+description: Rendered diff between two learning path revision snapshots.
+properties:
+  from:
+    $ref: '../common/RevisionRef.yaml'
+  to:
+    $ref: '../common/RevisionRef.yaml'
+  fields:
+    type: object
+    description: Per-field diff of the versioned metadata.
+    properties:
+      title:
+        $ref: '../common/FieldDiff.yaml'
+      summary:
+        $ref: '../common/FieldDiff.yaml'
+    required: [title, summary]
+  nodes:
+    type: object
+    description: Membership changes between the two revisions' included nodes.
+    properties:
+      added:
+        type: array
+        items:
+          $ref: './PathNode.yaml'
+      removed:
+        type: array
+        items:
+          $ref: './PathNode.yaml'
+      changed:
+        type: array
+        items:
+          $ref: './PathNode.yaml'
+    required: [added, removed, changed]
+  edges:
+    type: object
+    description: Projected prerequisite edge changes.
+    properties:
+      added:
+        type: array
+        items:
+          type: object
+          properties:
+            from_id:
+              $ref: '../common/Uuid.yaml'
+            to_id:
+              $ref: '../common/Uuid.yaml'
+          required: [from_id, to_id]
+      removed:
+        type: array
+        items:
+          type: object
+          properties:
+            from_id:
+              $ref: '../common/Uuid.yaml'
+            to_id:
+              $ref: '../common/Uuid.yaml'
+          required: [from_id, to_id]
+    required: [added, removed]
+required: [from, to, fields, nodes, edges]

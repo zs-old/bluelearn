@@ -1,0 +1,20 @@
+type: object
+description: A learning path's stable identity, pointing at its live revision.
+properties:
+  id:
+    $ref: '../common/Uuid.yaml'
+  slug:
+    type: string
+    example: backend-engineer
+  title:
+    type: string
+    example: Backend Engineer
+  summary:
+    type: [string, 'null']
+  current_revision_id:
+    oneOf:
+      - $ref: '../common/Uuid.yaml'
+      - type: 'null'
+  status:
+    $ref: '../common/NodeStatus.yaml'
+required: [id, slug, title, status]

@@ -1,0 +1,123 @@
+# Root spec. Stitches the per-resource path files under ./paths together,
+# which in turn $ref the models under ./components. Open this file in Swagger
+# UI / Redoc to see the whole API.
+openapi: 3.1.0
+info:
+  title: Bluelearn API
+  version: 0.1.0
+  description: >
+    Hono API in front of Supabase/Postgres. The frontend never talks to
+    Supabase directly; every call goes through here and carries the user's
+    JWT so Postgres RLS enforces access.
+servers:
+  - url: http://localhost:8787
+    description: Local dev (pnpm dev:api)
+
+tags:
+  - name: identity
+    description: The caller's own profile (/me) and public profiles
+  - name: guides
+    description: Topics (guide bases) and their canonical content
+  - name: variants
+    description: Methods/alternatives under a topic
+  - name: guide-revisions
+    description: Per-guide version history snapshots
+  - name: learning-paths
+    description: Curated curricula
+  - name: learning-path-revisions
+    description: Path version history and node editing
+  - name: graph
+    description: Prerequisite edges and TODO prerequisites
+  - name: subjects
+    description: Subject tags over the global graph
+  - name: reviews
+    description: Review cases, panels, and decisions
+  - name: media
+    description: Object-storage uploads
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase access token. Forwarded to Postgres so RLS applies.
+
+paths:
+  /me:
+    $ref: './paths/identity.yaml#/~1me'
+  /me/drafts:
+    $ref: './paths/identity.yaml#/~1me~1drafts'
+  /profiles/{username}:
+    $ref: './paths/identity.yaml#/~1profiles~1{username}'
+
+  /guides:
+    $ref: './paths/guides.yaml#/~1guides'
+  /guides/{slug}:
+    $ref: './paths/guides.yaml#/~1guides~1{slug}'
+  /guides/{slug}/walkthrough:
+    $ref: './paths/guides.yaml#/~1guides~1{slug}~1walkthrough'
+  /guides/{slug}/variants:
+    $ref: './paths/guides.yaml#/~1guides~1{slug}~1variants'
+  /guides/{slug}/{variantSlug}:
+    $ref: './paths/guides.yaml#/~1guides~1{slug}~1{variantSlug}'
+
+  /variants/{id}:
+    $ref: './paths/variants.yaml#/~1variants~1{id}'
+  /variants/{id}/vote:
+    $ref: './paths/variants.yaml#/~1variants~1{id}~1vote'
+  /variants/{id}/revisions:
+    $ref: './paths/variants.yaml#/~1variants~1{id}~1revisions'
+  /variants/{id}/rollback:
+    $ref: './paths/variants.yaml#/~1variants~1{id}~1rollback'
+
+  /guide-revisions/{id}:
+    $ref: './paths/guide-revisions.yaml#/~1guide-revisions~1{id}'
+  /guide-revisions/{id}/submit:
+    $ref: './paths/guide-revisions.yaml#/~1guide-revisions~1{id}~1submit'
+  /guide-revisions/{id}/diff/{otherId}:
+    $ref: './paths/guide-revisions.yaml#/~1guide-revisions~1{id}~1diff~1{otherId}'
+
+  /paths:
+    $ref: './paths/learning-paths.yaml#/~1paths'
+  /paths/{slug}:
+    $ref: './paths/learning-paths.yaml#/~1paths~1{slug}'
+  /paths/{slug}/revisions:
+    $ref: './paths/learning-paths.yaml#/~1paths~1{slug}~1revisions'
+
+  /path-revisions/{id}:
+    $ref: './paths/learning-path-revisions.yaml#/~1path-revisions~1{id}'
+  /path-revisions/{id}/nodes/{baseId}:
+    $ref: './paths/learning-path-revisions.yaml#/~1path-revisions~1{id}~1nodes~1{baseId}'
+  /path-revisions/{id}/publish:
+    $ref: './paths/learning-path-revisions.yaml#/~1path-revisions~1{id}~1publish'
+  /path-revisions/{id}/rollback:
+    $ref: './paths/learning-path-revisions.yaml#/~1path-revisions~1{id}~1rollback'
+  /path-revisions/{id}/diff/{otherId}:
+    $ref: './paths/learning-path-revisions.yaml#/~1path-revisions~1{id}~1diff~1{otherId}'
+
+  /prerequisites:
+    $ref: './paths/graph.yaml#/~1prerequisites'
+  /prerequisites/{id}:
+    $ref: './paths/graph.yaml#/~1prerequisites~1{id}'
+  /todos:
+    $ref: './paths/graph.yaml#/~1todos'
+
+  /subjects:
+    $ref: './paths/subjects.yaml#/~1subjects'
+  /subjects/{slug}:
+    $ref: './paths/subjects.yaml#/~1subjects~1{slug}'
+  /subjects/{slug}/guides:
+    $ref: './paths/subjects.yaml#/~1subjects~1{slug}~1guides'
+
+  /reviews/queue:
+    $ref: './paths/reviews.yaml#/~1reviews~1queue'
+  /reviews/cases:
+    $ref: './paths/reviews.yaml#/~1reviews~1cases'
+  /reviews/cases/{id}:
+    $ref: './paths/reviews.yaml#/~1reviews~1cases~1{id}'
+  /reviews/cases/{id}/decisions:
+    $ref: './paths/reviews.yaml#/~1reviews~1cases~1{id}~1decisions'
+
+  /media/upload:
+    $ref: './paths/media.yaml#/~1media~1upload'

@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { supabaseMiddleware } from './middleware/auth.middleware'
+import { ServiceError } from './lib/service-error'
 import type { HonoEnv } from './types'
 import { meRouter, profilesRouter } from './routes/identity'
 import { guidesRouter, variantsRouter, guideRevisionsRouter } from './routes/guides'
@@ -27,6 +28,14 @@ const app = new Hono<HonoEnv>()
   .route('/subjects', subjectsRouter)
   .route('/reviews', reviewsRouter)
   .route('/media', mediaRouter)
+
+// Services throw ServiceError to signal HTTP-meaningful failures; map them to
+// JSON here so handlers stay free of repeated `if (error) return c.json(...)`.
+app.onError((err, c) => {
+  if (err instanceof ServiceError) return c.json({ error: err.message }, err.status)
+  console.error(err)
+  return c.json({ error: 'Internal server error' }, 500)
+})
 
 export default app
 export type AppType = typeof app

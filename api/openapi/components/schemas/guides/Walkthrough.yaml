@@ -1,0 +1,34 @@
+type: object
+description: A guide's transitive prerequisite DAG, RLS-filtered.
+properties:
+  nodes:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          $ref: '../common/Uuid.yaml'
+        slug:
+          type: string
+          example: arithmetic
+        title:
+          type: string
+          example: Arithmetic
+        summary:
+          type: [string, 'null']
+        depth:
+          type: integer
+          description: Longest prerequisite-chain depth in this walkthrough (target = 0).
+          example: 2
+      required: [id, slug, title, depth]
+  edges:
+    type: array
+    items:
+      type: object
+      properties:
+        from_id:
+          $ref: '../common/Uuid.yaml'
+        to_id:
+          $ref: '../common/Uuid.yaml'
+      required: [from_id, to_id]
+required: [nodes, edges]

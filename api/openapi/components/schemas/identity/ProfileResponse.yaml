@@ -1,0 +1,7 @@
+type: object
+properties:
+  profile:
+    $ref: './PublicProfile.yaml'
+  roles:
+    $ref: './Roles.yaml'
+required: [profile, roles]

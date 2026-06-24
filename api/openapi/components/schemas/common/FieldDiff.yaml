@@ -1,0 +1,10 @@
+type: object
+description: Rendered diff for a single versioned field.
+properties:
+  changed:
+    type: boolean
+    example: true
+  diff:
+    type: [string, 'null']
+    description: Rendered diff when changed; null when unchanged.
+required: [changed]

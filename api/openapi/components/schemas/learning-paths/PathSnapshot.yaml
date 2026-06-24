@@ -1,0 +1,38 @@
+type: object
+description: >
+  A path revision's frozen curriculum: included nodes and the projected
+  prerequisite edges among them.
+properties:
+  nodes:
+    type: array
+    items:
+      type: object
+      properties:
+        guide_base_id:
+          $ref: '../common/Uuid.yaml'
+        guide_id:
+          description: The pinned guide variant for this node; always set.
+          $ref: '../common/Uuid.yaml'
+        slug:
+          type: [string, 'null']
+          example: postgres
+        title:
+          type: string
+          example: PostgreSQL
+        is_target:
+          type: boolean
+          example: true
+        note:
+          type: [string, 'null']
+      required: [guide_base_id, guide_id, is_target]
+  edges:
+    type: array
+    items:
+      type: object
+      properties:
+        from_id:
+          $ref: '../common/Uuid.yaml'
+        to_id:
+          $ref: '../common/Uuid.yaml'
+      required: [from_id, to_id]
+required: [nodes, edges]

@@ -1,0 +1,10 @@
+type: object
+description: Overwrite a draft revision's metadata (pre-submit only). Partial.
+minProperties: 1
+properties:
+  title:
+    type: string
+    example: Backend Engineer
+  summary:
+    type: [string, 'null']
+    example: Updated summary

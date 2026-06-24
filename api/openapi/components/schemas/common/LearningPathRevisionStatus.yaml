@@ -1,0 +1,6 @@
+type: string
+description: >
+  A learning path revision is either an editable draft or published. Paths have
+  no review gate, so there is no submitted/approved/rejected state as on guides.
+enum: [draft, published]
+example: draft

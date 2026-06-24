@@ -1,0 +1,18 @@
+type: object
+description: A declared missing prerequisite topic (no guide base exists for it yet).
+properties:
+  id:
+    $ref: '../common/Uuid.yaml'
+  guide_base_id:
+    description: The dependent guide base that declared the need.
+    $ref: '../common/Uuid.yaml'
+  title:
+    type: string
+    example: Trigonometry
+  status:
+    type: string
+    enum: [open, resolved]
+    example: open
+  created_at:
+    $ref: '../common/Timestamp.yaml'
+required: [id, guide_base_id, title, status]

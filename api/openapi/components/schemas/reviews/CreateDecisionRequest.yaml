@@ -1,0 +1,29 @@
+description: >
+  Cast a panel vote. An approve carries only a justification; a reject must
+  also cite at least one rubric reason.
+oneOf:
+  - title: Approve
+    type: object
+    properties:
+      decision:
+        type: string
+        const: approved
+      justification:
+        type: string
+        example: All the information is correct.
+    required: [decision, justification]
+  - title: Reject
+    type: object
+    properties:
+      decision:
+        type: string
+        const: rejected
+      justification:
+        type: string
+        example: Missing prerequisites
+      reasons:
+        type: array
+        minItems: 1
+        items:
+          $ref: './ReviewDecisionReason.yaml'
+    required: [decision, justification, reasons]

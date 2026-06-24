@@ -11,5 +11,7 @@ export const prerequisitesRouter = new Hono<HonoEnv>()
 
 export const todosRouter = new Hono<HonoEnv>()
   // Shows all open TODO prerequisites
-  // Declaration lives at POST /guides/:slug/todos
   .get('/', (c) => c.json({ error: 'Not implemented' }, 501))
+
+  // Declare a TODO prerequisite (missing prereq topic with no guide base yet)
+  .post('/', requireUser, (c) => c.json({ error: 'Not implemented' }, 501))

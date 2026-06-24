@@ -21,9 +21,9 @@ export type Database = {
           forked_from_guide_base_id: string | null
           id: string
           knowledge_type: Database["public"]["Enums"]["knowledge_type"]
-          slug: string
+          slug: string | null
           status: Database["public"]["Enums"]["node_status"]
-          title: string
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -32,9 +32,9 @@ export type Database = {
           forked_from_guide_base_id?: string | null
           id?: string
           knowledge_type: Database["public"]["Enums"]["knowledge_type"]
-          slug: string
+          slug?: string | null
           status?: Database["public"]["Enums"]["node_status"]
-          title: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -43,9 +43,9 @@ export type Database = {
           forked_from_guide_base_id?: string | null
           id?: string
           knowledge_type?: Database["public"]["Enums"]["knowledge_type"]
-          slug?: string
+          slug?: string | null
           status?: Database["public"]["Enums"]["node_status"]
-          title?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -142,6 +142,7 @@ export type Database = {
       }
       guide_revisions: {
         Row: {
+          approved_at: string | null
           author_id: string | null
           body: string | null
           change_summary: string | null
@@ -149,12 +150,13 @@ export type Database = {
           guide_id: string
           id: string
           is_purged: boolean
-          revision_number: number
           status: Database["public"]["Enums"]["revision_status"]
           summary: string | null
           title: string | null
+          updated_at: string
         }
         Insert: {
+          approved_at?: string | null
           author_id?: string | null
           body?: string | null
           change_summary?: string | null
@@ -162,12 +164,13 @@ export type Database = {
           guide_id: string
           id?: string
           is_purged?: boolean
-          revision_number: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
+          updated_at?: string
         }
         Update: {
+          approved_at?: string | null
           author_id?: string | null
           body?: string | null
           change_summary?: string | null
@@ -175,10 +178,10 @@ export type Database = {
           guide_id?: string
           id?: string
           is_purged?: boolean
-          revision_number?: number
           status?: Database["public"]["Enums"]["revision_status"]
           summary?: string | null
           title?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -282,36 +285,6 @@ export type Database = {
           },
         ]
       }
-      learning_path_review_cases: {
-        Row: {
-          case_id: string
-          learning_path_revision_id: string
-        }
-        Insert: {
-          case_id: string
-          learning_path_revision_id: string
-        }
-        Update: {
-          case_id?: string
-          learning_path_revision_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_path_review_cases_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "review_cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "learning_path_review_cases_learning_path_revision_id_fkey"
-            columns: ["learning_path_revision_id"]
-            isOneToOne: false
-            referencedRelation: "learning_path_revisions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       learning_path_revision_edges: {
         Row: {
           from_guide_base_id: string
@@ -349,6 +322,7 @@ export type Database = {
         Row: {
           guide_base_id: string
           guide_id: string
+          is_included: boolean
           is_target: boolean
           note: string | null
           revision_id: string
@@ -356,6 +330,7 @@ export type Database = {
         Insert: {
           guide_base_id: string
           guide_id: string
+          is_included?: boolean
           is_target?: boolean
           note?: string | null
           revision_id: string
@@ -363,6 +338,7 @@ export type Database = {
         Update: {
           guide_base_id?: string
           guide_id?: string
+          is_included?: boolean
           is_target?: boolean
           note?: string | null
           revision_id?: string
@@ -391,10 +367,11 @@ export type Database = {
           created_at: string
           id: string
           learning_path_id: string
-          revision_number: number
-          status: Database["public"]["Enums"]["revision_status"]
+          published_at: string | null
+          status: Database["public"]["Enums"]["learning_path_revision_status"]
           summary: string | null
           title: string | null
+          updated_at: string
         }
         Insert: {
           author_id?: string | null
@@ -402,10 +379,11 @@ export type Database = {
           created_at?: string
           id?: string
           learning_path_id: string
-          revision_number: number
-          status?: Database["public"]["Enums"]["revision_status"]
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["learning_path_revision_status"]
           summary?: string | null
           title?: string | null
+          updated_at?: string
         }
         Update: {
           author_id?: string | null
@@ -413,10 +391,11 @@ export type Database = {
           created_at?: string
           id?: string
           learning_path_id?: string
-          revision_number?: number
-          status?: Database["public"]["Enums"]["revision_status"]
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["learning_path_revision_status"]
           summary?: string | null
           title?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -743,6 +722,7 @@ export type Database = {
           id: string
           name: string
           slug: string
+          summary: string | null
         }
         Insert: {
           created_at?: string
@@ -750,6 +730,7 @@ export type Database = {
           id?: string
           name: string
           slug: string
+          summary?: string | null
         }
         Update: {
           created_at?: string
@@ -757,6 +738,7 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+          summary?: string | null
         }
         Relationships: [
           {
@@ -901,13 +883,26 @@ export type Database = {
       }
     }
     Functions: {
-      create_topic: {
+      compute_walkthrough: { Args: { p_guide_base_id: string }; Returns: Json }
+      create_guide: {
         Args: {
           p_body?: string
-          p_knowledge_type: Database["public"]["Enums"]["knowledge_type"]
-          p_slug: string
+          p_knowledge_type?: Database["public"]["Enums"]["knowledge_type"]
           p_summary?: string
-          p_title: string
+          p_title?: string
+        }
+        Returns: string
+      }
+      create_learning_path: {
+        Args: { p_summary?: string; p_targets: string[]; p_title?: string }
+        Returns: string
+      }
+      create_variant: {
+        Args: {
+          p_body?: string
+          p_guide_base_id: string
+          p_summary?: string
+          p_title?: string
         }
         Returns: string
       }
@@ -915,15 +910,26 @@ export type Database = {
         Args: { check_role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      project_path_edges: {
+        Args: { p_revision_id: string }
+        Returns: {
+          from_guide_base_id: string
+          to_guide_base_id: string
+        }[]
+      }
+      publish_learning_path_revision: {
+        Args: { p_revision_id: string }
+        Returns: string
+      }
+      submit_guide_revision: {
+        Args: { p_revision_id: string }
+        Returns: string
+      }
     }
     Enums: {
-      app_role: "verifier" | "moderator" | "admin"
+      app_role: "verifier" | "moderator" | "curator" | "admin"
       case_status: "pending" | "in_review" | "approved" | "rejected"
-      case_type:
-        | "guide_publish"
-        | "guide_edit"
-        | "learning_path_publish"
-        | "learning_path_edit"
+      case_type: "guide_publish" | "guide_edit"
       decision_reason:
         | "hierarchy_issue"
         | "factual_error"
@@ -942,6 +948,7 @@ export type Database = {
         | "scope_creep"
       edge_type: "prerequisite" | "related"
       knowledge_type: "theory" | "practice"
+      learning_path_revision_status: "draft" | "published"
       node_status: "draft" | "published" | "archived"
       review_outcome: "approved" | "rejected"
       revision_status: "draft" | "submitted"
@@ -1075,14 +1082,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["verifier", "moderator", "admin"],
+      app_role: ["verifier", "moderator", "curator", "admin"],
       case_status: ["pending", "in_review", "approved", "rejected"],
-      case_type: [
-        "guide_publish",
-        "guide_edit",
-        "learning_path_publish",
-        "learning_path_edit",
-      ],
+      case_type: ["guide_publish", "guide_edit"],
       decision_reason: [
         "hierarchy_issue",
         "factual_error",
@@ -1103,6 +1105,7 @@ export const Constants = {
       ],
       edge_type: ["prerequisite", "related"],
       knowledge_type: ["theory", "practice"],
+      learning_path_revision_status: ["draft", "published"],
       node_status: ["draft", "published", "archived"],
       review_outcome: ["approved", "rejected"],
       revision_status: ["draft", "submitted"],

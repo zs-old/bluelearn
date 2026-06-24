@@ -1,0 +1,27 @@
+type: object
+description: >
+  A TODO prerequisite as shown on the public board: the raw row enriched with
+  the dependent guide base's identity (published, so its slug exists) for links.
+properties:
+  id:
+    $ref: '../common/Uuid.yaml'
+  guide_base_id:
+    description: The dependent guide base that declared the need.
+    $ref: '../common/Uuid.yaml'
+  guide_slug:
+    type: string
+    description: Slug of the dependent guide base (published, so non-null).
+    example: calculus
+  guide_title:
+    type: string
+    example: Calculus
+  title:
+    type: string
+    example: Trigonometry
+  status:
+    type: string
+    enum: [open, resolved]
+    example: open
+  created_at:
+    $ref: '../common/Timestamp.yaml'
+required: [id, guide_base_id, guide_slug, guide_title, title, status]

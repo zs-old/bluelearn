@@ -1,0 +1,20 @@
+type: object
+description: >
+  A guide starts as an empty draft and is fleshed out in the editor, so every
+  field is optional. knowledge_type defaults to theory and stays editable while
+  the guide is a draft.
+properties:
+  title:
+    type: [string, 'null']
+    maxLength: 200
+    example: Calculus
+  knowledge_type:
+    $ref: './KnowledgeType.yaml'
+  summary:
+    type: [string, 'null']
+    maxLength: 500
+    example: The study of continuous change.
+  body:
+    type: [string, 'null']
+    example: |
+      # Calculus
